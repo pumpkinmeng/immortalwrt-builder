@@ -1,4 +1,4 @@
-name: Build ImmortalWrt (Pro)
+name: Build ImmortalWrt (Final Stable)
 
 on:
   workflow_dispatch:
@@ -24,7 +24,7 @@ jobs:
         run: |
           git clone --depth 1 https://github.com/immortalwrt/immortalwrt.git
 
-      # ✅ 加入 iStore（关键）
+      # ✅ iStore（必须在 feeds 前）
       - name: Add iStore
         run: |
           cd immortalwrt
@@ -36,23 +36,23 @@ jobs:
           ./scripts/feeds update -a
           ./scripts/feeds install -a
 
-      # ✅ 配置（避免 heredoc 坑，用 echo 更稳）
+      # ✅ 用官方方式写配置（不会被覆盖）
       - name: Load config
         run: |
           cd immortalwrt
 
-          echo "CONFIG_TARGET_x86=y" > .config
-          echo "CONFIG_TARGET_x86_64=y" >> .config
-          echo "CONFIG_TARGET_x86_64_DEVICE_generic=y" >> .config
-
-          echo "CONFIG_PACKAGE_luci=y" >> .config
-          echo "CONFIG_PACKAGE_luci-ssl=y" >> .config
-
-          # iStore
-          echo "CONFIG_PACKAGE_luci-app-store=y" >> .config
-          echo "CONFIG_PACKAGE_istore=y" >> .config
-
           make defconfig
+
+          ./scripts/config -e TARGET_x86
+          ./scripts/config -e TARGET_x86_64
+          ./scripts/config -e TARGET_x86_64_DEVICE_generic
+
+          ./scripts/config -e PACKAGE_luci
+          ./scripts/config -e PACKAGE_luci-ssl
+
+          # ✅ iStore（核心）
+          ./scripts/config -e PACKAGE_luci-app-store
+          ./scripts/config -e PACKAGE_istore
 
       - name: Compile
         run: |
