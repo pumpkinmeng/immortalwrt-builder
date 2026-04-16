@@ -1,4 +1,4 @@
-name: Build ImmortalWrt (iStore FINAL FIX)
+name: Build ImmortalWrt (iStore OK)
 
 on:
   workflow_dispatch:
@@ -15,14 +15,13 @@ jobs:
         run: |
           sudo apt-get update -y
           sudo apt-get install -y \
-          build-essential clang flex bison g++ gawk \
-          gcc-multilib g++-multilib gettext git libncurses-dev \
-          libssl-dev python3 rsync unzip zlib1g-dev file wget curl \
-          qemu-utils
+            build-essential clang flex bison g++ gawk \
+            gcc-multilib g++-multilib gettext git libncurses-dev \
+            libssl-dev python3 rsync unzip zlib1g-dev file wget curl \
+            qemu-utils
 
       - name: Clone source
-        run: |
-          git clone --depth 1 https://github.com/immortalwrt/immortalwrt.git
+        run: git clone --depth 1 https://github.com/immortalwrt/immortalwrt.git
 
       - name: Add iStore feed
         run: |
@@ -40,30 +39,31 @@ jobs:
           cd immortalwrt
           mkdir -p files/etc/config
 
-          cat > files/etc/config/network <<'EOF'
-config interface 'loopback'
-        option device 'lo'
-        option proto 'static'
-        option ipaddr '127.0.0.1'
-        option netmask '255.0.0.0'
+          echo "config interface 'loopback'" > files/etc/config/network
+          echo "        option device 'lo'" >> files/etc/config/network
+          echo "        option proto 'static'" >> files/etc/config/network
+          echo "        option ipaddr '127.0.0.1'" >> files/etc/config/network
+          echo "        option netmask '255.0.0.0'" >> files/etc/config/network
+          echo "" >> files/etc/config/network
 
-config globals 'globals'
-        option ula_prefix 'auto'
+          echo "config globals 'globals'" >> files/etc/config/network
+          echo "        option ula_prefix 'auto'" >> files/etc/config/network
+          echo "" >> files/etc/config/network
 
-config device
-        option name 'br-lan'
-        option type 'bridge'
-        list ports 'eth0'
+          echo "config device" >> files/etc/config/network
+          echo "        option name 'br-lan'" >> files/etc/config/network
+          echo "        option type 'bridge'" >> files/etc/config/network
+          echo "        list ports 'eth0'" >> files/etc/config/network
+          echo "" >> files/etc/config/network
 
-config interface 'lan'
-        option device 'br-lan'
-        option proto 'static'
-        option ipaddr '10.10.10.2'
-        option netmask '255.255.255.0'
-        option gateway '10.10.10.1'
-        list dns '223.5.5.5'
-        list dns '1.1.1.1'
-EOF
+          echo "config interface 'lan'" >> files/etc/config/network
+          echo "        option device 'br-lan'" >> files/etc/config/network
+          echo "        option proto 'static'" >> files/etc/config/network
+          echo "        option ipaddr '10.10.10.2'" >> files/etc/config/network
+          echo "        option netmask '255.255.255.0'" >> files/etc/config/network
+          echo "        option gateway '10.10.10.1'" >> files/etc/config/network
+          echo "        list dns '223.5.5.5'" >> files/etc/config/network
+          echo "        list dns '1.1.1.1'" >> files/etc/config/network
 
       - name: Load config
         run: |
