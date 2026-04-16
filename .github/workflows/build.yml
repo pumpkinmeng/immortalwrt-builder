@@ -1,4 +1,4 @@
-name: Build ImmortalWrt (Final Stable)
+name: Build ImmortalWrt (Final Working)
 
 on:
   workflow_dispatch:
@@ -20,7 +20,7 @@ jobs:
           libssl-dev python3 rsync unzip zlib1g-dev file wget curl \
           qemu-utils
 
-      - name: Clone ImmortalWrt
+      - name: Clone source
         run: |
           git clone --depth 1 https://github.com/immortalwrt/immortalwrt.git
 
@@ -35,8 +35,8 @@ jobs:
           ./scripts/feeds update -a
           ./scripts/feeds install -a
 
-      # ✅ 固定IP + 双DNS（已避免YAML坑）
-      - name: Set default network
+      # 固定IP + 双DNS
+      - name: Set network
         run: |
           cd immortalwrt
           mkdir -p files/etc/config
@@ -67,22 +67,24 @@ jobs:
           echo "        list dns '223.5.5.5'" >> files/etc/config/network
           echo "        list dns '1.1.1.1'" >> files/etc/config/network
 
+      # 核心配置（稳定方案）
       - name: Load config
         run: |
           cd immortalwrt
 
+          rm -f .config
+
+          echo "CONFIG_TARGET_x86=y" >> .config
+          echo "CONFIG_TARGET_x86_64=y" >> .config
+          echo "CONFIG_TARGET_x86_64_DEVICE_generic=y" >> .config
+
+          echo "CONFIG_PACKAGE_luci=y" >> .config
+          echo "CONFIG_PACKAGE_luci-ssl=y" >> .config
+
+          echo "CONFIG_PACKAGE_luci-app-store=y" >> .config
+          echo "CONFIG_PACKAGE_istore=y" >> .config
+
           make defconfig
-
-          ./scripts/config/config -e TARGET_x86
-          ./scripts/config/config -e TARGET_x86_64
-          ./scripts/config/config -e TARGET_x86_64_DEVICE_generic
-
-          ./scripts/config/config -e PACKAGE_luci
-          ./scripts/config/config -e PACKAGE_luci-ssl
-
-          # iStore
-          ./scripts/config/config -e PACKAGE_luci-app-store
-          ./scripts/config/config -e PACKAGE_istore
 
       - name: Compile
         run: |
