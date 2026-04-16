@@ -24,7 +24,6 @@ jobs:
         run: |
           git clone --depth 1 https://github.com/immortalwrt/immortalwrt.git
 
-      # ⭐关键：用 feeds 引入 istore（不是 git clone）
       - name: Add iStore feed
         run: |
           cd immortalwrt
@@ -41,7 +40,7 @@ jobs:
           cd immortalwrt
           mkdir -p files/etc/config
 
-          cat > files/etc/config/network <<EOF
+          cat > files/etc/config/network <<'EOF'
 config interface 'loopback'
         option device 'lo'
         option proto 'static'
