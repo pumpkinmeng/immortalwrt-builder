@@ -24,7 +24,6 @@ jobs:
         run: |
           git clone --depth 1 https://github.com/immortalwrt/immortalwrt.git
 
-      # ✅ iStore（必须在 feeds 前）
       - name: Add iStore
         run: |
           cd immortalwrt
@@ -36,23 +35,54 @@ jobs:
           ./scripts/feeds update -a
           ./scripts/feeds install -a
 
-      # ✅ 用官方方式写配置（不会被覆盖）
+      # ✅ 固定IP + 双DNS（已避免YAML坑）
+      - name: Set default network
+        run: |
+          cd immortalwrt
+          mkdir -p files/etc/config
+
+          echo "config interface 'loopback'" > files/etc/config/network
+          echo "        option device 'lo'" >> files/etc/config/network
+          echo "        option proto 'static'" >> files/etc/config/network
+          echo "        option ipaddr '127.0.0.1'" >> files/etc/config/network
+          echo "        option netmask '255.0.0.0'" >> files/etc/config/network
+          echo "" >> files/etc/config/network
+
+          echo "config globals 'globals'" >> files/etc/config/network
+          echo "        option ula_prefix 'auto'" >> files/etc/config/network
+          echo "" >> files/etc/config/network
+
+          echo "config device" >> files/etc/config/network
+          echo "        option name 'br-lan'" >> files/etc/config/network
+          echo "        option type 'bridge'" >> files/etc/config/network
+          echo "        list ports 'eth0'" >> files/etc/config/network
+          echo "" >> files/etc/config/network
+
+          echo "config interface 'lan'" >> files/etc/config/network
+          echo "        option device 'br-lan'" >> files/etc/config/network
+          echo "        option proto 'static'" >> files/etc/config/network
+          echo "        option ipaddr '10.10.10.2'" >> files/etc/config/network
+          echo "        option netmask '255.255.255.0'" >> files/etc/config/network
+          echo "        option gateway '10.10.10.1'" >> files/etc/config/network
+          echo "        list dns '223.5.5.5'" >> files/etc/config/network
+          echo "        list dns '1.1.1.1'" >> files/etc/config/network
+
       - name: Load config
         run: |
           cd immortalwrt
 
           make defconfig
 
-          ./scripts/config -e TARGET_x86
-          ./scripts/config -e TARGET_x86_64
-          ./scripts/config -e TARGET_x86_64_DEVICE_generic
+          ./scripts/config/config -e TARGET_x86
+          ./scripts/config/config -e TARGET_x86_64
+          ./scripts/config/config -e TARGET_x86_64_DEVICE_generic
 
-          ./scripts/config -e PACKAGE_luci
-          ./scripts/config -e PACKAGE_luci-ssl
+          ./scripts/config/config -e PACKAGE_luci
+          ./scripts/config/config -e PACKAGE_luci-ssl
 
-          # ✅ iStore（核心）
-          ./scripts/config -e PACKAGE_luci-app-store
-          ./scripts/config -e PACKAGE_istore
+          # iStore
+          ./scripts/config/config -e PACKAGE_luci-app-store
+          ./scripts/config/config -e PACKAGE_istore
 
       - name: Compile
         run: |
