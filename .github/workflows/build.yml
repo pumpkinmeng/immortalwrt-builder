@@ -1,4 +1,4 @@
-name: Build ImmortalWrt (Minimal Stable)
+name: Build ImmortalWrt (Final OK)
 
 on:
   workflow_dispatch:
@@ -8,8 +8,8 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
-      - name: Set env
-        run: echo FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true >> $GITHUB_ENV
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
       - name: Install dependencies
         run: |
@@ -19,48 +19,44 @@ jobs:
             gcc-multilib g++-multilib gettext git libncurses-dev \
             libssl-dev python3 rsync unzip zlib1g-dev file wget curl
 
-      - name: Clone ImmortalWrt source
+      - name: Clone source
         run: git clone --depth 1 https://github.com/immortalwrt/immortalwrt.git openwrt
 
       - name: Copy custom files
         run: cp -r immortalwrt/* openwrt/
 
-      - name: Run DIY Part1 (packages)
+      - name: Run DIY Part1
         run: |
           cd openwrt
           chmod +x diy-part1.sh
           ./diy-part1.sh
 
-      - name: Update & Install Feeds
+      - name: Update feeds
         run: |
           cd openwrt
           ./scripts/feeds update -a
           ./scripts/feeds install -a
 
-      - name: Load defconfig
+      - name: Load config
         run: |
           cp immortalwrt/defconfig openwrt/.config
           cd openwrt
           make defconfig
 
-      - name: Run DIY Part2 (system tweaks)
+      - name: Run DIY Part2
         run: |
           cd openwrt
           chmod +x diy-part2.sh
           ./diy-part2.sh
 
-      - name: Download packages
+      - name: Compile
         run: |
           cd openwrt
           make download -j8
-
-      - name: Compile firmware
-        run: |
-          cd openwrt
           make -j$(nproc) || make -j1 V=s
 
       - name: Upload firmware
         uses: actions/upload-artifact@v4
         with:
-          name: immortalwrt-x86
+          name: firmware
           path: openwrt/bin/targets/
