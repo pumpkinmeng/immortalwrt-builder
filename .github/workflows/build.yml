@@ -1,4 +1,4 @@
-name: Build ImmortalWrt (Correct Order)
+name: Build ImmortalWrt (iStore FIX)
 
 on:
   workflow_dispatch:
@@ -25,19 +25,19 @@ jobs:
       - name: Copy custom files
         run: cp -r immortalwrt/* openwrt/
 
-      # ✅ 先加载官方依赖
-      - name: Update feeds
-        run: |
-          cd openwrt
-          ./scripts/feeds update -a
-          ./scripts/feeds install -a
-
-      # ✅ 再引入 istore（关键顺序）
+      # ✅ 先加 feed
       - name: Run DIY Part1
         run: |
           cd openwrt
           chmod +x diy-part1.sh
           ./diy-part1.sh
+
+      # ✅ 再加载 feeds（关键顺序）
+      - name: Update feeds
+        run: |
+          cd openwrt
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a
 
       - name: Load config
         run: |
@@ -51,18 +51,14 @@ jobs:
           chmod +x diy-part2.sh
           ./diy-part2.sh
 
-      - name: Download packages
+      - name: Compile
         run: |
           cd openwrt
           make download -j8
-
-      - name: Compile firmware
-        run: |
-          cd openwrt
           make -j$(nproc) || make -j1 V=s
 
       - name: Upload firmware
         uses: actions/upload-artifact@v4
         with:
-          name: immortalwrt-x86
+          name: firmware
           path: openwrt/bin/targets/
